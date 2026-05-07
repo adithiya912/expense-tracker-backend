@@ -31,17 +31,27 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS
-allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
-allowed_origins = [o.strip() for o in allowed_origins_str.split(",")]
+# CORS — allow all origins by default so any deployed frontend can connect.
+# Set ALLOWED_ORIGINS env var to a comma-separated list to restrict (e.g. in production).
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "*")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if allowed_origins_str.strip() == "*":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    allowed_origins = [o.strip() for o in allowed_origins_str.split(",")]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(predictions_router)
 
